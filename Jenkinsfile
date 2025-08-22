@@ -30,11 +30,25 @@ pipeline {
             }
         }
       
-        stage("Build Application") {
+        
+
+        stage("Debug PATH") {
             steps {
-                sh "mvn clean package"
+                sh "echo $PATH"
+                sh "which mvn || echo 'Maven not found in PATH'"
+                sh "mvn -version || echo 'Maven not installed'"
             }
         }
+
+        stage("Build Application") {
+            steps {
+                script {
+                    def mvnHome = tool name: 'maven3', type: 'maven'
+                    sh "${mvnHome}/bin/mvn clean package"
+                }
+            }
+        }
+
       
         stage("Test Application") {
             steps {
