@@ -29,16 +29,6 @@ pipeline {
                     url: 'https://github.com/sohanmathewshera/register-app'
             }
         }
-      
-        
-
-        stage("Debug PATH") {
-            steps {
-                sh "echo $PATH"
-                sh "which mvn || echo 'Maven not found in PATH'"
-                sh "mvn -version || echo 'Maven not installed'"
-            }
-        }
 
         stage("Build Application") {
             steps {
@@ -49,23 +39,26 @@ pipeline {
             }
         }
 
-      
         stage("Test Application") {
             steps {
-                sh "mvn test"
+                script {
+                    def mvnHome = tool name: 'maven3', type: 'maven'
+                    sh "${mvnHome}/bin/mvn test"
+                }
             }
         }
 
         stage("SonarQube Analysis") {
             steps {
                 script {
+                    def mvnHome = tool name: 'maven3', type: 'maven'
                     withSonarQubeEnv(credentialsId: 'jenkins-sonarqube-token') { 
-                        sh "mvn sonar:sonar"
+                        sh "${mvnHome}/bin/mvn sonar:sonar"
                     }
                 }   
             }
         }
-        
+
         stage("Quality Gate") {
             steps {
                 script {
@@ -96,14 +89,14 @@ pipeline {
                 }
             }
         }
+
         stage ('Cleanup Artifacts') {
             steps {
                 script {
-                    sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG}"
-                    sh "docker rmi ${IMAGE_NAME}:latest"
+                    sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG} || true"
+                    sh "docker rmi ${IMAGE_NAME}:latest || true"
                 }
             }
         }
-
     }
 }
